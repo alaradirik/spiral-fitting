@@ -35,7 +35,6 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/*
 
 # ---------- Clone villa ----------
-# Installed under /opt for portability across providers.
 WORKDIR /opt
 RUN git clone --depth 1 https://github.com/ScrollPrize/villa.git
 
@@ -57,6 +56,9 @@ RUN pip install --break-system-packages \
 RUN pip install --break-system-packages \
         -e /opt/villa/volume-cartographer
 
+# ---------- JupyterLab ----------
+RUN pip install --break-system-packages jupyterlab
+
 # ---------- Convenience ----------
 RUN install -m 0755 /dev/stdin /usr/local/bin/vc3d <<'BASH'
 #!/usr/bin/env bash
@@ -66,11 +68,12 @@ BASH
 
 WORKDIR /root
 
+EXPOSE 8888
+
 RUN install -m 0755 /dev/stdin /usr/local/bin/start.sh <<'BASH'
 #!/usr/bin/env bash
 echo "============================================="
 echo "  ScrollPrize Spiral Fitting — Ready!"
-echo "  (full build with VC Python bindings)"
 echo "============================================="
 echo ""
 echo "Python:  $(python --version)"
@@ -93,7 +96,21 @@ echo "  cd /your/target/dir/villa/volume-cartographer/scripts/spiral"
 echo "  # edit dataset_path in fit_spiral.py"
 echo "  python fit_spiral.py"
 echo ""
-exec sleep infinity
+echo "JupyterLab starting on port 8888..."
+echo ""
+
+# Launch JupyterLab in the background
+jupyter lab \
+    --ip=0.0.0.0 \
+    --port=8888 \
+    --no-browser \
+    --allow-root \
+    --NotebookApp.token='' \
+    --NotebookApp.password='' \
+    --ServerApp.allow_origin='*' &
+
+# Keep container alive
+wait
 BASH
 
 CMD ["/usr/local/bin/start.sh"]
