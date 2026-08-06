@@ -52,7 +52,6 @@ RUN pip install --break-system-packages \
 RUN pip install --break-system-packages \
         -e /opt/villa/volume-cartographer/scripts/spiral
 
-# Compile VC Python bindings via scikit-build-core
 RUN pip install --break-system-packages \
         -e /opt/villa/volume-cartographer
 
@@ -105,12 +104,13 @@ jupyter lab \
     --port=8888 \
     --no-browser \
     --allow-root \
-    --NotebookApp.token='' \
-    --NotebookApp.password='' \
-    --ServerApp.allow_origin='*' &
+    --ServerApp.token='' \
+    --ServerApp.password='' \
+    --ServerApp.allow_origin='*' \
+    --ServerApp.root_dir='/' &
 
-# Keep container alive
-wait
+# Keep container alive (also keeps RunPod's web terminal working)
+exec sleep infinity
 BASH
 
 CMD ["/usr/local/bin/start.sh"]
